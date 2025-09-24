@@ -76,15 +76,11 @@ object Main extends App {
   // knowing that it's a valid List[Post].
   printPosts(posts)
 
-  // Example of further processing: get the first post
-  posts.headOption match {
-    case Some(firstPost) =>
-      println(s"\nExample processing: The title of the first post is '${firstPost.title}'")
-    case None =>
-      println("\nNo posts found in the JSON file.")
-  }
-
-  // You can now add more processing logic here.
-  val popularPosts = posts.filter(_.likes > 100)
-  println(s"\nThere are ${popularPosts.length} popular posts (more than 100 likes).")
+  val root_stream = TydiStream.from_seq(posts)
+  val title_stream = root_stream.drill(_.title)
+  val tags_stream = root_stream.drill(_.tags).drill(x => x)
+  val comments_stream = root_stream.drill(_.comments)
+  println(title_stream)
+  println(tags_stream)
+  println(comments_stream)
 }
