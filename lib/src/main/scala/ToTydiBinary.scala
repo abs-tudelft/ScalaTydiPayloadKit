@@ -15,13 +15,13 @@ object ToTydiBinary {
 
   // 1. Int: Create binary from Int.
   implicit val intToTydiBinary: ToTydiBinary[Int] = new ToTydiBinary[Int] {
-    def toBinary(i: Int): TydiBinary = TydiBinary(i.asInstanceOf[BigInt], 32)
+    def toBinary(i: Int): TydiBinary = TydiBinary(BigInt(i), 32)
     val binSize = 32
   }
 
   // 2. Double/Float: Converts to Int (potentially losing precision) and adds it.
   implicit val doubleToTydiBinary: ToTydiBinary[Double] = new ToTydiBinary[Double] {
-    def toBinary(d: Double): TydiBinary = TydiBinary(d.toInt.asInstanceOf[BigInt], 32)
+    def toBinary(d: Double): TydiBinary = TydiBinary(BigInt(d.toInt), 32)
     val binSize = 32
   }
 

@@ -11,6 +11,7 @@ libraryDependencies ++= Seq(
 ).map(_ % circeVersion)
 
 libraryDependencies += "com.softwaremill.magnolia1_2" %% "magnolia" % "1.1.10"
+libraryDependencies +=  "org.scala-lang" % "scala-reflect" % "2.13.16"
 
 lazy val root = (project in file("."))
   .settings(

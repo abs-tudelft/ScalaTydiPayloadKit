@@ -78,13 +78,14 @@ object Main extends App {
   // knowing that it's a valid List[Post].
   printPosts(posts)
 
-  val statsSummable = implicitly[Summable[Post]]
+  val statsSummable = Summable.gen[Post]
 
   val totalSum: Int = statsSummable.sum(posts.head)
 
-  val dunno = implicitly[ToTydiBinary[Post]]
+  val postBinarizer = ToTydiBinary.gen[Post]
 
-  dunno.toBinary(posts.head)
+  val binaryFirstPost = postBinarizer.toBinary(posts.head)
+  println(binaryFirstPost.length)
 
   val root_stream = TydiStream.from_seq(posts)
   val title_stream = root_stream.drill(_.title)
