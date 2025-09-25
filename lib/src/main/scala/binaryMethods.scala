@@ -1,3 +1,5 @@
+package TydiPackaging
+
 package object binaryMethods {
   implicit class fromIntToBinary(i: Int) extends ToTydiBinary {
     def toBinary: TydiBinary = TydiBinary(i.asInstanceOf[BigInt], 32)

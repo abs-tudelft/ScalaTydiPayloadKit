@@ -1,3 +1,5 @@
+package TydiPackaging
+
 class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
   /** "Drill" into the structure to the iterable field referenced in [[f]], creating a new dimension in the `last` data. */
   def drill[U](f: T => Seq[U]): TydiStream[U] = {

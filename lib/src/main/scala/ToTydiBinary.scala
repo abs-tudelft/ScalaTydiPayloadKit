@@ -1,3 +1,5 @@
+package TydiPackaging
+
 trait ToTydiBinary {
   val binSize: Int
 

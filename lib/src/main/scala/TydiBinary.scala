@@ -1,3 +1,5 @@
+package TydiPackaging
+
 case class TydiBinary (data: BigInt, length: Int) {
   def concat(other: TydiBinary): TydiBinary = {
     val new_data = data << length | other.data
