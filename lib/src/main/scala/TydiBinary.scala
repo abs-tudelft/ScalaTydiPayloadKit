@@ -12,3 +12,8 @@ case class TydiBinary (data: BigInt, length: Int) {
     (TydiBinary(new_data, n), TydiBinary(data, new_length))
   }
 }
+
+object TydiBinary {
+  def apply(data: BigInt, length: Int): TydiBinary = new TydiBinary(data, length)
+  def empty: TydiBinary = TydiBinary(0, 0)
+}

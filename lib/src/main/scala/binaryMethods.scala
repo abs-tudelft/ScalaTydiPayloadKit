@@ -1,10 +1,12 @@
 package TydiPackaging
 
-package object binaryMethods {
-  implicit class fromIntToBinary(i: Int) extends ToTydiBinary {
+/*package object binaryMethods {
+  implicit class fromIntToBinary(i: Int) extends ToTydiBinary[Int] {
     def toBinary: TydiBinary = TydiBinary(i.asInstanceOf[BigInt], 32)
 
     override val binSize: Int = 32
+
+    override def toBinary(t: Int): TydiBinary = ???
   }
 
   /*implicit class fromBigIntToBinary(i: BigInt) extends ToTydiBinary {
@@ -29,5 +31,5 @@ package object binaryMethods {
 
     override val binSize: Int = o.binSize + 1
   }
-}
+}*/
 

@@ -57,13 +57,6 @@ object Main extends App {
     })
   }
 
-  def getCCParams(cc: AnyRef) = {
-    cc.getClass.getDeclaredFields.foldLeft(Map.empty[String, Any]) { (a, f) =>
-      f.setAccessible(true)
-      a + (f.getName -> f.get(cc))
-    }
-  }
-
   val filename = "posts.json"
 
   // Read the JSON file and then parse the content.
@@ -85,7 +78,9 @@ object Main extends App {
   // knowing that it's a valid List[Post].
   printPosts(posts)
 
-  val params = getCCParams(posts.head)
+  val dunno = implicitly[ToTydiBinary[Post]]
+
+  dunno.toBinary(posts.head)
 
   val root_stream = TydiStream.from_seq(posts)
   val title_stream = root_stream.drill(_.title)
