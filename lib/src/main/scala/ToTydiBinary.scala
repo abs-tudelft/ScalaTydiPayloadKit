@@ -2,6 +2,8 @@ package TydiPackaging
 
 //import TydiPackaging.binaryMethods._
 
+import TydiPackaging.binaryMethods._
+
 import language.experimental.macros
 import magnolia1._
 
@@ -13,25 +15,51 @@ trait ToTydiBinary[T] {
 
 object ToTydiBinary {
 
-  // 1. Int: Create binary from Int.
+  implicit def optionToTydiBinary[A](implicit A: ToTydiBinary[A]): ToTydiBinary[Option[A]] = new ToTydiBinary[Option[A]] {
+    def toBinary(o: Option[A]): TydiBinary = {
+      o match {
+        case Some(el) => true.toBinary.concat(A.toBinary(el))
+        case None => false.toBinary.concat(TydiBinary(0, A.binSize))
+      }
+    }
+    val binSize = 1
+  }
+
+  implicit val boolToTydiBinary: ToTydiBinary[Boolean] = new ToTydiBinary[Boolean] {
+    def toBinary(b: Boolean): TydiBinary = TydiBinary(b.asInstanceOf[BigInt], binSize)
+    val binSize = 1
+  }
+
   implicit val intToTydiBinary: ToTydiBinary[Int] = new ToTydiBinary[Int] {
-    def toBinary(i: Int): TydiBinary = TydiBinary(BigInt(i), 32)
+    def toBinary(i: Int): TydiBinary = TydiBinary(BigInt(i), binSize)
     val binSize = 32
   }
 
-  // 2. Double/Float: Converts to Int (potentially losing precision) and adds it.
   implicit val doubleToTydiBinary: ToTydiBinary[Double] = new ToTydiBinary[Double] {
-    def toBinary(d: Double): TydiBinary = TydiBinary(BigInt(d.toInt), 32)
+    def toBinary(d: Double): TydiBinary = {
+      // There is also a "raw" version of this method that only differs in the handling of NaN values.
+      val num = java.lang.Double.doubleToLongBits(d)
+      TydiBinary(num, binSize)
+    }
+    val binSize = 64
+  }
+
+  implicit val floatToTydiBinary: ToTydiBinary[Float] = new ToTydiBinary[Float] {
+    def toBinary(d: Float): TydiBinary = {
+      // See note for Double
+      val num = java.lang.Float.floatToIntBits(d)
+      TydiBinary(num, binSize)
+    }
     val binSize = 32
   }
 
-  // 3. String: becomes a separate stream, so the binary is empty.
+  // String: becomes a separate stream, so the binary is empty.
   implicit val stringToTydiBinary: ToTydiBinary[String] = new ToTydiBinary[String] {
     def toBinary(s: String): TydiBinary =  TydiBinary.empty
     val binSize = 0
   }
 
-  // 4. List: becomes a separate stream, so the binary is empty.
+  // List: becomes a separate stream, so the binary is empty.
   implicit def listToTydiBinary[A](implicit A: ToTydiBinary[A]): ToTydiBinary[List[A]] =
     new ToTydiBinary[List[A]] {
       def toBinary(l: List[A]): TydiBinary = TydiBinary.empty

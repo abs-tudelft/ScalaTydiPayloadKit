@@ -86,9 +86,12 @@ object Main extends App {
   val totalSum: Int = statsSummable.sum(posts.head)
 
   val postBinarizer = ToTydiBinary.gen[Post]
+  val commentBinarizer = ToTydiBinary.gen[Comment]
 
   val binaryFirstPost = postBinarizer.toBinary(posts.head)
-  println(s"First post value: ${binaryFirstPost.binString}, length: ${binaryFirstPost.length}")
+  println(s"First post value: ${binaryFirstPost.binString}")
+  val binaryFirstComment = commentBinarizer.toBinary(posts.head.comments.head)
+  println(s"First comment value: ${binaryFirstComment.binString}, length: ${binaryFirstComment.length}")
 
   val root_stream = TydiStream.from_seq(posts)
   val title_stream = root_stream.drill(_.title)
