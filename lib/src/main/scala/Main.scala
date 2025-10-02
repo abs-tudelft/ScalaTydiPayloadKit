@@ -5,6 +5,8 @@ import io.circe.parser._
 import java.time.Instant
 import scala.io.Source
 import scala.util.Using
+// Even though the implicit conversion definitions are not actively used, they *need* to be imported to be available for the compiler.
+import CustomBinaryConversions._
 
 object Main extends App {
 

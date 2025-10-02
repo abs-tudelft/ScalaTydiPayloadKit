@@ -5,8 +5,6 @@ package TydiPackaging
 import language.experimental.macros
 import magnolia1._
 
-import java.time.Instant
-
 trait ToTydiBinary[T] {
   val binSize: Int
 
@@ -19,13 +17,6 @@ object ToTydiBinary {
   implicit val intToTydiBinary: ToTydiBinary[Int] = new ToTydiBinary[Int] {
     def toBinary(i: Int): TydiBinary = TydiBinary(BigInt(i), 32)
     val binSize = 32
-  }
-
-  implicit val instantToBinary: ToTydiBinary[Instant] = new ToTydiBinary[Instant] {
-    def toBinary(i: Instant): TydiBinary = {
-      TydiBinary(BigInt(i.toEpochMilli), binSize)
-    }
-    val binSize = 64
   }
 
   // 2. Double/Float: Converts to Int (potentially losing precision) and adds it.
