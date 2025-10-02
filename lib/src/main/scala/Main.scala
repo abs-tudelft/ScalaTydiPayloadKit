@@ -2,6 +2,7 @@ package TydiPackaging
 
 import io.circe.generic.auto._
 import io.circe.parser._
+import java.time.Instant
 import scala.io.Source
 import scala.util.Using
 
@@ -9,14 +10,14 @@ object Main extends App {
 
   // Case classes to represent the JSON data structure
   case class Author(userId: Int, username: String)
-  case class Comment(commentId: Int, author: Author, content: String, createdAt: String, likes: Int, inReplyToCommentId: Option[Int])
+  case class Comment(commentId: Int, author: Author, content: String, createdAt: Instant, likes: Int, inReplyToCommentId: Option[Int])
   case class Post(
                    postId: Int,
                    title: String,
                    content: String,
                    author: Author,
-                   createdAt: String,
-                   updatedAt: String,
+                   createdAt: Instant,
+                   updatedAt: Instant,
                    tags: List[String],
                    likes: Int,
                    shares: Int,
@@ -85,7 +86,7 @@ object Main extends App {
   val postBinarizer = ToTydiBinary.gen[Post]
 
   val binaryFirstPost = postBinarizer.toBinary(posts.head)
-  println(binaryFirstPost.length)
+  println(s"First post value: ${binaryFirstPost.binString}, length: ${binaryFirstPost.length}")
 
   val root_stream = TydiStream.from_seq(posts)
   val title_stream = root_stream.drill(_.title)

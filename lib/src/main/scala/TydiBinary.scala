@@ -2,7 +2,7 @@ package TydiPackaging
 
 case class TydiBinary (data: BigInt, length: Int) {
   def concat(other: TydiBinary): TydiBinary = {
-    val new_data = data << length | other.data
+    val new_data = data << other.length | other.data
     TydiBinary(new_data, length + other.length)
   }
 
@@ -11,6 +11,8 @@ case class TydiBinary (data: BigInt, length: Int) {
     val new_data = data >> n
     (TydiBinary(new_data, n), TydiBinary(data, new_length))
   }
+
+  def binString: String = "0b" + data.toString(2).padTo(length, '0').substring(0, length)
 }
 
 object TydiBinary {
