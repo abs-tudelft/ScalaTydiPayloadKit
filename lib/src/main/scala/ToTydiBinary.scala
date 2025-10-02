@@ -53,10 +53,9 @@ object ToTydiBinary {
   // Magnolia's boilerplate for deriving for a case class (Product)
   type Typeclass[T] = ToTydiBinary[T]
 
-  /** Choose which equality subtype to defer to
+  /** Create typeclasses for sealed-traits/enums ('sum types')
    *
-   * Note that in addition to dispatching based on the type of the first parameter to the `equal` method, we check that the second
-   * parameter is the same type.
+   * Frankly, I am not sure how this works based on the limited information of the GitHub repository.
    */
   def split[T](ctx: SealedTrait[ToTydiBinary, T]): ToTydiBinary[T] = new ToTydiBinary[T] {
     override val binSize: Int = 0 // Fixme not sure how to solve this
@@ -68,7 +67,7 @@ object ToTydiBinary {
   def join[T](ctx: magnolia1.CaseClass[ToTydiBinary, T]): ToTydiBinary[T] =
     new ToTydiBinary[T] {
       def toBinary(t: T): TydiBinary = {
-        ctx.parameters.toList.map { param =>
+        ctx.parameters.reverse.toList.map { param =>
           // 1. Get the value of the field from the case class instance 't'.
           val fieldValue = param.dereference(t)
 

@@ -12,7 +12,12 @@ case class TydiBinary (data: BigInt, length: Int) {
     (TydiBinary(new_data, n), TydiBinary(data, new_length))
   }
 
-  def binString: String = "0b" + data.toString(2).padTo(length, '0').substring(0, length)
+  def binString: String = {
+    val toPad = length - data.bitLength
+    "0b" + ("0".repeat(toPad) + data.toString(2)).substring(0, length)
+  }
+
+  override def toString: String = binString
 }
 
 object TydiBinary {
