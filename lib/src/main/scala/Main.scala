@@ -93,6 +93,14 @@ object Main extends App {
   val binaryFirstComment = commentBinarizer.toBinary(posts.head.comments.head)
   println(s"First comment value: ${binaryFirstComment.binString}, length: ${binaryFirstComment.length}")
 
+  val postDebinarizer = FromTydiBinary.gen[Post]
+  val commentDebinarizer = FromTydiBinary.gen[Comment]
+
+  val reconstructedFirstPost = postDebinarizer.fromBinary(binaryFirstPost)._1
+  println(s"Reconstructed first post: $reconstructedFirstPost")
+  val reconstructedFirstComment = commentDebinarizer.fromBinary(binaryFirstComment)._1
+  println(s"Reconstructed first comment: $reconstructedFirstComment")
+
   val root_stream = TydiStream.from_seq(posts)
   val title_stream = root_stream.drill(_.title)
   val tags_stream = root_stream.drill(_.tags).drill(x => x)

@@ -1,6 +1,7 @@
 package TydiPackaging
 
 import java.time.Instant
+import TydiPackaging.FromTydiBinary._
 
 object CustomBinaryConversions {
   implicit val instantToBinary: ToTydiBinary[Instant] = new ToTydiBinary[Instant] {
@@ -8,5 +9,14 @@ object CustomBinaryConversions {
       TydiBinary(BigInt(i.toEpochMilli), binSize)
     }
     val binSize = 64
+  }
+
+  implicit val instantFromBinary: FromTydiBinary[Instant] = new FromTydiBinary[Instant] {
+    val binSize = 64
+
+    def fromBinary(t: TydiBinary): (Instant, TydiBinary) = {
+      val (i, rest) = longFromTydiBinary.fromBinary(t)
+      (Instant.ofEpochMilli(i), rest)
+    }
   }
 }

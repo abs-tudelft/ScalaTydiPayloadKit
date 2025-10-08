@@ -1,7 +1,5 @@
 package TydiPackaging
 
-//import TydiPackaging.binaryMethods._
-
 import TydiPackaging.binaryMethods._
 
 import language.experimental.macros
@@ -33,6 +31,11 @@ object ToTydiBinary {
   implicit val intToTydiBinary: ToTydiBinary[Int] = new ToTydiBinary[Int] {
     def toBinary(i: Int): TydiBinary = TydiBinary(BigInt(i), binSize)
     val binSize = 32
+  }
+
+  implicit val longToTydiBinary: ToTydiBinary[Long] = new ToTydiBinary[Long] {
+    def toBinary(l: Long): TydiBinary = TydiBinary(BigInt(l), binSize)
+    val binSize = 64
   }
 
   implicit val doubleToTydiBinary: ToTydiBinary[Double] = new ToTydiBinary[Double] {
