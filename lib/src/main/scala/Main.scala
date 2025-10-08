@@ -2,21 +2,24 @@ package TydiPackaging
 
 import io.circe.generic.auto._
 import io.circe.parser._
+import java.time.Instant
 import scala.io.Source
 import scala.util.Using
+// Even though the implicit conversion definitions are not actively used, they *need* to be imported to be available for the compiler.
+import CustomBinaryConversions._
 
 object Main extends App {
 
   // Case classes to represent the JSON data structure
   case class Author(userId: Int, username: String)
-  case class Comment(commentId: Int, author: Author, content: String, createdAt: String, likes: Int, inReplyToCommentId: Option[Int])
+  case class Comment(commentId: Int, author: Author, content: String, createdAt: Instant, likes: Int, inReplyToCommentId: Option[Int])
   case class Post(
                    postId: Int,
                    title: String,
                    content: String,
                    author: Author,
-                   createdAt: String,
-                   updatedAt: String,
+                   createdAt: Instant,
+                   updatedAt: Instant,
                    tags: List[String],
                    likes: Int,
                    shares: Int,
@@ -57,13 +60,6 @@ object Main extends App {
     })
   }
 
-  def getCCParams(cc: AnyRef) = {
-    cc.getClass.getDeclaredFields.foldLeft(Map.empty[String, Any]) { (a, f) =>
-      f.setAccessible(true)
-      a + (f.getName -> f.get(cc))
-    }
-  }
-
   val filename = "posts.json"
 
   // Read the JSON file and then parse the content.
@@ -85,7 +81,17 @@ object Main extends App {
   // knowing that it's a valid List[Post].
   printPosts(posts)
 
-  val params = getCCParams(posts.head)
+  val statsSummable = Summable.gen[Post]
+
+  val totalSum: Int = statsSummable.sum(posts.head)
+
+  val postBinarizer = ToTydiBinary.gen[Post]
+  val commentBinarizer = ToTydiBinary.gen[Comment]
+
+  val binaryFirstPost = postBinarizer.toBinary(posts.head)
+  println(s"First post value: ${binaryFirstPost.binString}")
+  val binaryFirstComment = commentBinarizer.toBinary(posts.head.comments.head)
+  println(s"First comment value: ${binaryFirstComment.binString}, length: ${binaryFirstComment.length}")
 
   val root_stream = TydiStream.from_seq(posts)
   val title_stream = root_stream.drill(_.title)
