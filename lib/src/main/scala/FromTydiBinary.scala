@@ -12,7 +12,7 @@ trait FromTydiBinary[T] {
 object FromTydiBinary {
 
   implicit def optionFromTydiBinary[A](implicit A: FromTydiBinary[A]): FromTydiBinary[Option[A]] = (t: TydiBinary) => {
-    val (boolVal, res) = t.split(1)
+    val (boolVal, res) = t.splitLow(1)
     val isSome = boolVal.data == 1
     if (isSome) {
       val v = (A.fromBinary(res))
@@ -25,27 +25,27 @@ object FromTydiBinary {
   }
 
   implicit val boolFromTydiBinary: FromTydiBinary[Boolean] = (t: TydiBinary) => {
-    val (boolVal, res) = t.split(1)
+    val (boolVal, res) = t.splitLow(1)
     (if (boolVal.data == 1) true else false, res)
   }
 
   implicit val intFromTydiBinary: FromTydiBinary[Int] = (t: TydiBinary) => {
-    val (intVal, res) = t.split(32)
+    val (intVal, res) = t.splitLow(32)
     (intVal.data.toInt, res)
   }
 
   implicit val longFromTydiBinary: FromTydiBinary[Long] = (t: TydiBinary) => {
-    val (longVal, res) = t.split(64)
+    val (longVal, res) = t.splitLow(64)
     (longVal.data.toLong, res)
   }
 
   implicit val doubleFromTydiBinary: FromTydiBinary[Double] = (t: TydiBinary) => {
-    val (doubleVal, res) = t.split(64)
+    val (doubleVal, res) = t.splitLow(64)
     (java.lang.Double.longBitsToDouble(doubleVal.data.toLong), res)
   }
 
   implicit val floatFromTydiBinary: FromTydiBinary[Float] = (t: TydiBinary) => {
-    val (floatVal, res) = t.split(32)
+    val (floatVal, res) = t.splitLow(32)
     (java.lang.Float.intBitsToFloat(floatVal.data.toInt), res)
   }
 

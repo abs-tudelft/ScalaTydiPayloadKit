@@ -89,7 +89,7 @@ object ToTydiBinary {
   def join[T](ctx: magnolia1.CaseClass[ToTydiBinary, T]): ToTydiBinary[T] =
     new ToTydiBinary[T] {
       def toBinary(t: T): TydiBinary = {
-        ctx.parameters.reverse.toList.map { param =>
+        ctx.parameters.toList.map { param =>
           // 1. Get the value of the field from the case class instance 't'.
           val fieldValue = param.dereference(t)
 
