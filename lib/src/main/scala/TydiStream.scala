@@ -37,6 +37,36 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
     TydiStream(new_packets)
   }
 
+  def mapData[U](f: T => U): TydiStream[U] = {
+    TydiStream(packets.map(_.mapData(f)))
+  }
+
+  def inject[U](f: (T, Seq[U]) => T, data: TydiStream[U]): TydiStream[T] = {
+    val dataIter = data.packets.iterator
+
+    val newPackets = packets.map(packet => {
+      val m = packet.data match {
+        case Some(selfData) => {
+          var prevLast = false
+          val newSeq: Seq[U] = dataIter.takeWhile(p => {
+            val nonEmpty = p.data.isDefined
+            val last = p.last.last
+            val continue = nonEmpty && !prevLast
+            prevLast = last
+            continue
+          }).map(el => el.data.get).toSeq
+          Some(f(selfData, newSeq))
+        }
+        case None => {
+          dataIter.next()
+          None
+        }
+      }
+      TydiPacket(m, packet.last)
+    })
+    TydiStream(newPackets)
+  }
+
   def toBinaryBlobs()(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
     packets.map(_.toBinary)
   }

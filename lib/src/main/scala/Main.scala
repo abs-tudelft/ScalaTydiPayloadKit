@@ -96,6 +96,8 @@ object Main extends App {
 
   val reconstructedPosts: TydiStream[Post] = TydiStream.fromBinaryBlobs(postBlobs, 1)
   println(s"Reconstructed first post: ${reconstructedPosts.packets.head}")
-//  val reconstructedFirstComment = commentDebinarizer.fromBinary(binaryFirstComment)._1
-//  println(s"Reconstructed first comment: $reconstructedFirstComment")
+  val reconstructedComments: TydiStream[Comment] = TydiStream.fromBinaryBlobs(commentBlobs, 2)
+  println(s"Reconstructed first comment: ${reconstructedComments.packets.head}")
+  val postsWithComments = reconstructedPosts.inject((p, s: Seq[Comment]) => p.copy(comments = s.toList), reconstructedComments)
+  println(s"Reconstructed first post with comments: ${postsWithComments.packets.head}")
 }
