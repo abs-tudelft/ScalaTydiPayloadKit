@@ -21,7 +21,10 @@ case class TydiBinary (data: BigInt, length: Int) {
   def splitLow(n: Int): (TydiBinary, TydiBinary) = {
     val new_length = length - n
     val new_data = data >> n
-    (TydiBinary(data, n), TydiBinary(new_data, new_length))
+    val modulus = BigInt(1) << n
+    val mask = modulus - 1
+    val data_masked = data & mask
+    (TydiBinary(data_masked, n), TydiBinary(new_data, new_length))
   }
 
   /**
@@ -33,7 +36,10 @@ case class TydiBinary (data: BigInt, length: Int) {
   def splitHigh(n: Int): (TydiBinary, TydiBinary) = {
     val new_length = length - n
     val new_data = data >> new_length
-    (TydiBinary(new_data, n), TydiBinary(data, new_length))
+    val modulus = BigInt(1) << new_length
+    val mask = modulus - 1
+    val data_masked = data & mask
+    (TydiBinary(new_data, n), TydiBinary(data_masked, new_length))
   }
 
   def binString: String = {
