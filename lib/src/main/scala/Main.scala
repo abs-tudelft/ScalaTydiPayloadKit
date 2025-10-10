@@ -81,31 +81,21 @@ object Main extends App {
   // knowing that it's a valid List[Post].
   printPosts(posts)
 
-  val statsSummable = Summable.gen[Post]
-
-  val totalSum: Int = statsSummable.sum(posts.head)
-
-  val postBinarizer = ToTydiBinary.gen[Post]
-  val commentBinarizer = ToTydiBinary.gen[Comment]
-
-  val binaryFirstPost = postBinarizer.toBinary(posts.head)
-  println(s"First post value: ${binaryFirstPost.binString}")
-  val binaryFirstComment = commentBinarizer.toBinary(posts.head.comments.head)
-  println(s"First comment value: ${binaryFirstComment.binString}, length: ${binaryFirstComment.length}")
-
-  val postDebinarizer = FromTydiBinary.gen[Post]
-  val commentDebinarizer = FromTydiBinary.gen[Comment]
-
-  val reconstructedFirstPost = postDebinarizer.fromBinary(binaryFirstPost)._1
-  println(s"Reconstructed first post: $reconstructedFirstPost")
-  val reconstructedFirstComment = commentDebinarizer.fromBinary(binaryFirstComment)._1
-  println(s"Reconstructed first comment: $reconstructedFirstComment")
-
-  val root_stream = TydiStream.from_seq(posts)
+  val root_stream = TydiStream.fromSeq(posts)
   val title_stream = root_stream.drill(_.title)
   val tags_stream = root_stream.drill(_.tags).drill(x => x)
   val comments_stream = root_stream.drill(_.comments)
   println(title_stream)
   println(tags_stream)
   println(comments_stream)
+
+  val postBlobs = root_stream.toBinaryBlobs
+  println(postBlobs.head)
+  val commentBlobs = comments_stream.toBinaryBlobs
+  println(commentBlobs.head)
+
+  val reconstructedPosts: TydiStream[Post] = TydiStream.fromBinaryBlobs(postBlobs, 1)
+  println(s"Reconstructed first post: ${reconstructedPosts.packets.head}")
+//  val reconstructedFirstComment = commentDebinarizer.fromBinary(binaryFirstComment)._1
+//  println(s"Reconstructed first comment: $reconstructedFirstComment")
 }

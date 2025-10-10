@@ -1,5 +1,8 @@
 package TydiPackaging
 
+import TydiPackaging.FromTydiBinary._
+import TydiPackaging.binaryMethods.fromBinaryToBoolSeq
+
 class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
   /** "Drill" into the structure to the iterable field referenced in [[f]], creating a new dimension in the `last` data. */
   def drill[U](f: T => Seq[U]): TydiStream[U] = {
@@ -33,16 +36,25 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
     }
     TydiStream(new_packets)
   }
+
+  def toBinaryBlobs()(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
+    packets.map(_.toBinary)
+  }
 }
 
 object TydiStream {
   def apply[T](packets: Seq[TydiPacket[T]]): TydiStream[T] = new TydiStream(packets)
 
-  def from_seq[T](seq: Seq[T]): TydiStream[T] = {
+  def fromSeq[T](seq: Seq[T]): TydiStream[T] = {
     val length = seq.length
     val packets = seq.zipWithIndex.map {
       case (el, i) => TydiPacket(Some(el), Seq(i == length - 1))
     }
+    TydiStream(packets)
+  }
+
+  def fromBinaryBlobs[T](blobs: Seq[TydiBinary], dim: Int)(implicit A: FromTydiBinary[T]): TydiStream[T] = {
+    val packets = blobs.map(TydiPacket.fromTydiBinary[T](_, dim))
     TydiStream(packets)
   }
 }

@@ -14,5 +14,22 @@ package object binaryMethods {
   implicit class fromBoolToBinary(b: Boolean) {
     def toBinary: TydiBinary = TydiBinary(if (b) BigInt(1) else BigInt(0), 1)
   }
+
+  implicit class fromBoolSeqToBinary(b: Seq[Boolean]) {
+    def toBinary: TydiBinary = {
+      val binary = b.foldLeft(TydiBinary.empty) {
+        case (acc, el) => acc.concat(el.toBinary)
+      }
+      binary
+    }
+  }
+
+  val fromBinaryToBoolSeq: TydiBinary => Seq[Boolean] = (b: TydiBinary) => {
+    val num = b.data
+    for (i <- 0 until b.length) yield {
+      val bit = num & (1 << i)
+      bit != 0
+    }
+  }
 }
 
