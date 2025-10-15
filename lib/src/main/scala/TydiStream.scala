@@ -41,9 +41,48 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
     TydiStream(packets.map(_.mapData(f)))
   }
 
+  /**
+   * "Inject" a new dimension into the stream.
+   * @param f Mapping function that creates a new packet from the old packet and the nested data sequence.
+   * @param data Stream to inject into this stream.
+   * @tparam U Type of the nested data.
+   * @return
+   */
   def inject[U](f: (T, Seq[U]) => T, data: TydiStream[U]): TydiStream[T] = {
-    val dataIter = data.packets.iterator
+    val (finalRows, currentRow) = data.packets.foldLeft(List.empty[List[U]], List.empty[U]) {
+      case ((rows, current), el) => {
+        el.data match {
+          case Some(data) => {
+            // Prepend the current item to the 'current' row
+            val newCurrentRow: List[U] = data :: current
 
+            if (el.last.last) {
+              // If the current packet closes the lowest dimension, prepend the finished current row to the final rows and start a new row.
+              (newCurrentRow.reverse :: rows, List.empty[U])
+            } else {
+              (rows, newCurrentRow)
+            }
+          }
+          case None => {
+            // In case of an empty packet, add an empty list. The parent packet should also be empty, and this empty list will therefore not be used.
+            (List.empty[U] :: rows, List.empty[U])
+          }
+        }
+      }
+    }
+
+    // After iteration, prepend the final `currentRow` (if not empty) to `finalRows`.
+    // Both need to be reversed to restore the original order.
+    val nestedDataStructured = (currentRow.reverse :: finalRows).reverse
+
+    // Add restructured data to own packets
+    val newPackets = packets.zip(nestedDataStructured).map {
+      case (p, c) => {
+        p.mapData(d => f(d, c))
+      }
+    }
+
+    /*val dataIter = data.packets.iterator
     val newPackets = packets.map(packet => {
       val m = packet.data match {
         case Some(selfData) => {
@@ -63,8 +102,12 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
         }
       }
       TydiPacket(m, packet.last)
-    })
+    })*/
     TydiStream(newPackets)
+  }
+
+  def toSeq: Seq[T] = {
+    packets.map(_.data.get)
   }
 
   def toBinaryBlobs()(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
