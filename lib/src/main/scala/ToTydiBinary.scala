@@ -56,6 +56,13 @@ object ToTydiBinary {
     val binSize = 32
   }
 
+  implicit val charToTydiBinary: ToTydiBinary[Char] = new ToTydiBinary[Char] {
+    // Char is a 16-bit value because it uses UTF-16, while our binary representation is 8 bits.
+    // Therefore, this conversion is not ideal. Fixme
+    def toBinary(i: Char): TydiBinary = TydiBinary(BigInt(i), binSize)
+    val binSize = 8
+  }
+
   // String: becomes a separate stream, so the binary is empty.
   implicit val stringToTydiBinary: ToTydiBinary[String] = new ToTydiBinary[String] {
     def toBinary(s: String): TydiBinary =  TydiBinary.empty

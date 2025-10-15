@@ -26,6 +26,82 @@ object Main extends App {
                    comments: List[Comment]
                  )
 
+  case class PhysicalStreamsTyped(
+                                  posts: TydiStream[Post],
+                                  post_titles: TydiStream[Char],
+                                  post_contents: TydiStream[Char],
+                                  post_author_username: TydiStream[Char],
+                                  post_tags: TydiStream[Char],
+                                  post_comment_author_username: TydiStream[Char],
+                                  post_comment_content: TydiStream[Char],
+                                  post_comments: TydiStream[Comment]
+                                 ) {
+    def reverse(): Seq[Post] = {
+      val comments_recreated = post_comments
+//      comments_recreated.inject_string(|el| &mut el.author.username, self.post_comment_author_username);
+//      comments_recreated.inject_string(|el| &mut el.content, self.post_comment_content);
+
+      val posts_recreated = posts.inject[Comment]((p: Post, s) => p.copy(comments = s.toList), comments_recreated)
+//      val tags_recreated = post_tags.solidify_into_strings()
+//      posts_recreated.inject(|el| &mut el.tags, tags_recreated)
+//      posts_recreated.inject_string(|el| &mut el.title, self.post_titles)
+//      posts_recreated.inject_string(|el| &mut el.content, self.post_contents)
+//      posts_recreated.inject_string(|el| &mut el.author.username, self.post_author_username)
+
+      posts_recreated.toSeq
+    }
+  }
+
+  object PhysicalStreamsTyped {
+    def apply(posts: Seq[Post]): PhysicalStreamsTyped = {
+      val posts_tydi = TydiStream.fromSeq(posts);
+      val titles_tydi = posts_tydi.drill(_.title);
+      val contents_tydi = posts_tydi.drill(_.content);
+      val tags_tydi = posts_tydi.drill(_.tags).drill(x => x);
+      val comments_tydi = posts_tydi.drill(_.comments);
+      val comment_author_tydi = comments_tydi.drill(_.author.username);
+
+      new PhysicalStreamsTyped(
+        post_titles=titles_tydi,
+        post_contents=contents_tydi,
+        post_author_username=posts_tydi.drill(_.author.username),
+        post_tags=tags_tydi,
+        post_comment_author_username=comment_author_tydi,
+        post_comment_content=comments_tydi.drill(_.content),
+        post_comments=comments_tydi,
+        posts=posts_tydi
+      )
+    }
+  }
+
+  type TydiBinaryStream = Seq[TydiBinary]
+
+  case class PhysicalStreamsBinary(
+    posts: TydiBinaryStream,
+    post_titles: TydiBinaryStream,
+    post_contents: TydiBinaryStream,
+    post_author_username: TydiBinaryStream,
+    post_tags: TydiBinaryStream,
+    post_comments: TydiBinaryStream,
+    post_comment_author_username: TydiBinaryStream,
+    post_comment_content: TydiBinaryStream,
+  )
+
+  object PhysicalStreamsBinary {
+    def apply(posts: PhysicalStreamsTyped): PhysicalStreamsBinary = {
+      new PhysicalStreamsBinary(
+        posts=posts.posts.toBinaryBlobs(),
+        post_titles=posts.post_titles.toBinaryBlobs(),
+        post_contents=posts.post_contents.toBinaryBlobs(),
+        post_author_username=posts.post_author_username.toBinaryBlobs(),
+        post_tags=posts.post_tags.toBinaryBlobs(),
+        post_comments=posts.post_comments.toBinaryBlobs(),
+        post_comment_author_username=posts.post_comment_author_username.toBinaryBlobs(),
+        post_comment_content=posts.post_comment_content.toBinaryBlobs(),
+      )
+    }
+  }
+
   /**
    * Reads the content of a file into a single string.
    *
@@ -81,22 +157,13 @@ object Main extends App {
   // knowing that it's a valid List[Post].
   printPosts(posts)
 
-  val root_stream = TydiStream.fromSeq(posts)
-  val title_stream = root_stream.drill(_.title)
-  val tags_stream = root_stream.drill(_.tags).drill(x => x)
-  val comments_stream = root_stream.drill(_.comments)
-  println(title_stream)
-  println(tags_stream)
-  println(comments_stream)
+  private val streamsTyped = PhysicalStreamsTyped(posts)
+  private val streamsBinary = PhysicalStreamsBinary(streamsTyped)
 
-  val postBlobs = root_stream.toBinaryBlobs
-  println(postBlobs.head)
-  val commentBlobs = comments_stream.toBinaryBlobs
-  println(commentBlobs.head)
-  val reconstructedComments: TydiStream[Comment] = TydiStream.fromBinaryBlobs(commentBlobs, 2)
+  val reconstructedComments: TydiStream[Comment] = TydiStream.fromBinaryBlobs(streamsBinary.post_comments, 2)
   println(s"Reconstructed first comment: ${reconstructedComments.packets.head}")
 
-  val reconstructedPosts = TydiStream.fromBinaryBlobs[Post](postBlobs, 1)
+  val reconstructedPosts = TydiStream.fromBinaryBlobs[Post](streamsBinary.posts, 1)
     .inject[Comment]((p: Post, s) => p.copy(comments = s.toList), reconstructedComments)
     .toSeq
   println(s"Reconstructed first post with comments: ${reconstructedPosts.head}")
