@@ -16,5 +16,6 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % Test
 
 lazy val root = (project in file("."))
   .settings(
-    name := "lib"
+    name := "tydi-packaging",
+    organization := "nl.tudelft",
   )
