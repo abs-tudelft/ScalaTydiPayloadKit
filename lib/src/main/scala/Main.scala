@@ -38,15 +38,16 @@ object Main extends App {
                                  ) {
     def reverse(): Seq[Post] = {
       val comments_recreated = post_comments
-//      comments_recreated.inject_string(|el| &mut el.author.username, self.post_comment_author_username);
-//      comments_recreated.inject_string(|el| &mut el.content, self.post_comment_content);
+        .injectString((c: Comment, s) => c.copy(author = c.author.copy(username = s)), post_comment_author_username)
+        .injectString((c: Comment, s) => c.copy(content = s), post_comment_content)
 
-      val posts_recreated = posts.inject[Comment]((p: Post, s) => p.copy(comments = s.toList), comments_recreated)
-//      val tags_recreated = post_tags.solidify_into_strings()
-//      posts_recreated.inject(|el| &mut el.tags, tags_recreated)
-//      posts_recreated.inject_string(|el| &mut el.title, self.post_titles)
-//      posts_recreated.inject_string(|el| &mut el.content, self.post_contents)
-//      posts_recreated.inject_string(|el| &mut el.author.username, self.post_author_username)
+      val tags_recreated = post_tags.unpackToStrings()
+      val posts_recreated = posts
+        .inject[Comment]((p: Post, s) => p.copy(comments = s.toList), comments_recreated)
+        .inject[String]((p: Post, s) => p.copy(tags = s.toList), tags_recreated)
+        .injectString((p: Post, s) => p.copy(title = s), post_titles)
+        .injectString((p: Post, s) => p.copy(content = s), post_contents)
+        .injectString((p: Post, s) => p.copy(author = p.author.copy(username = s)), post_author_username)
 
       posts_recreated.toSeq
     }

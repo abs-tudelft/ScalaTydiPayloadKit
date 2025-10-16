@@ -42,6 +42,51 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
   }
 
   /**
+   * "Unpack" the lowest dimension of the stream to packets of lists.
+   * @return New stream with the lowest dimension unwrapped.
+   */
+  def unpackDim(): TydiStream[List[T]] = {
+    val (finalRows, _) = packets.foldLeft(List.empty[TydiPacket[List[T]]], List.empty[T]) {
+      case ((rows, current), el) => {
+        el.data match {
+          case Some(data) => {
+            // Prepend the current item to the 'current' row
+            val newCurrentRow: List[T] = data :: current
+
+            if (el.last.last) {
+              // If the current packet closes the lowest dimension, finished the packet with the current row, add to the final rows and start a new row.
+              (TydiPacket(Some(newCurrentRow.reverse), el.last.init) :: rows, List.empty[T])
+            } else {
+              // If not, continue the current row (item already added above).
+              (rows, newCurrentRow)
+            }
+          }
+          case None => {
+            if (el.last.last) {
+              // If the current empty packet closes the lowest dimension, prepend a packet with an empty list to the final rows and start a new row.
+              (TydiPacket(Some(List.empty[T]), el.last.init) :: rows, List.empty[T])
+            } else {
+              // If not, prepend an empty packet.
+              (TydiPacket[List[T]](None, el.last.init) :: rows, List.empty[T])
+            }
+          }
+        }
+      }
+    }
+
+    // After iteration, prepend the final `currentRow` should be empty, as all dimensions are either closed or the last item is empty.
+    // In both cases, the final `currentRow` row is empty and all data is in the `finalRows`.
+    // Both need to be reversed to restore the original order.
+    TydiStream(finalRows.reverse)
+  }
+
+  def unpackToStrings(): TydiStream[String] = {
+    val charStream = this.unpackDim()
+    val stringStream = charStream.mapData(c => c.mkString)
+    stringStream
+  }
+
+  /**
    * "Inject" a new dimension into the stream.
    * @param f Mapping function that creates a new packet from the old packet and the nested data sequence.
    * @param data Stream to inject into this stream.
@@ -49,60 +94,34 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
    * @return
    */
   def inject[U](f: (T, Seq[U]) => T, data: TydiStream[U]): TydiStream[T] = {
-    val (finalRows, currentRow) = data.packets.foldLeft(List.empty[List[U]], List.empty[U]) {
-      case ((rows, current), el) => {
-        el.data match {
-          case Some(data) => {
-            // Prepend the current item to the 'current' row
-            val newCurrentRow: List[U] = data :: current
-
-            if (el.last.last) {
-              // If the current packet closes the lowest dimension, prepend the finished current row to the final rows and start a new row.
-              (newCurrentRow.reverse :: rows, List.empty[U])
-            } else {
-              (rows, newCurrentRow)
-            }
-          }
-          case None => {
-            // In case of an empty packet, add an empty list. The parent packet should also be empty, and this empty list will therefore not be used.
-            (List.empty[U] :: rows, List.empty[U])
-          }
-        }
-      }
-    }
-
-    // After iteration, prepend the final `currentRow` (if not empty) to `finalRows`.
-    // Both need to be reversed to restore the original order.
-    val nestedDataStructured = (currentRow.reverse :: finalRows).reverse
+    val restructuredData = data.unpackDim()
 
     // Add restructured data to own packets
-    val newPackets = packets.zip(nestedDataStructured).map {
+    val newPackets = packets.zip(restructuredData.packets).map {
       case (p, c) => {
-        p.mapData(d => f(d, c))
+        p.mapData(d => f(d, c.data.get))
       }
     }
 
-    /*val dataIter = data.packets.iterator
-    val newPackets = packets.map(packet => {
-      val m = packet.data match {
-        case Some(selfData) => {
-          var prevLast = false
-          val newSeq: Seq[U] = dataIter.takeWhile(p => {
-            val nonEmpty = p.data.isDefined
-            val last = p.last.last
-            val continue = nonEmpty && !prevLast
-            prevLast = last
-            continue
-          }).map(el => el.data.get).toSeq
-          Some(f(selfData, newSeq))
-        }
-        case None => {
-          dataIter.next()
-          None
-        }
+    TydiStream(newPackets)
+  }
+
+  /**
+   * "Inject" a new dimension into the stream.
+   * @param f Mapping function that creates a new packet from the old packet and the nested data sequence.
+   * @param data Stream of string data to inject into this stream.
+   * @return
+   */
+  def injectString(f: (T, String) => T, data: TydiStream[Char]): TydiStream[T] = {
+    val restructuredData = data.unpackToStrings()
+
+    // Add restructured data to own packets
+    val newPackets = packets.zip(restructuredData.packets).map {
+      case (p, c) => {
+        p.mapData(d => f(d, c.data.get))
       }
-      TydiPacket(m, packet.last)
-    })*/
+    }
+
     TydiStream(newPackets)
   }
 
