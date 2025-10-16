@@ -49,6 +49,11 @@ object FromTydiBinary {
     (java.lang.Float.intBitsToFloat(floatVal.data.toInt), res)
   }
 
+  implicit val charFromTydiBinary: FromTydiBinary[Char] = (t: TydiBinary) => {
+    val (charVal, res) = t.splitLow(8)
+    (charVal.data.toChar, res)
+  }
+
   // String: becomes a separate stream, so the binary is empty.
   implicit val stringFromTydiBinary: FromTydiBinary[String] = (t: TydiBinary) => {
     ("", t)

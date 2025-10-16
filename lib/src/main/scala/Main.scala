@@ -77,15 +77,28 @@ object Main extends App {
   type TydiBinaryStream = Seq[TydiBinary]
 
   case class PhysicalStreamsBinary(
-    posts: TydiBinaryStream,
-    post_titles: TydiBinaryStream,
-    post_contents: TydiBinaryStream,
-    post_author_username: TydiBinaryStream,
-    post_tags: TydiBinaryStream,
-    post_comments: TydiBinaryStream,
-    post_comment_author_username: TydiBinaryStream,
-    post_comment_content: TydiBinaryStream,
-  )
+                                    posts: TydiBinaryStream,
+                                    post_titles: TydiBinaryStream,
+                                    post_contents: TydiBinaryStream,
+                                    post_author_username: TydiBinaryStream,
+                                    post_tags: TydiBinaryStream,
+                                    post_comments: TydiBinaryStream,
+                                    post_comment_author_username: TydiBinaryStream,
+                                    post_comment_content: TydiBinaryStream,
+                                  ) {
+    def reverse(): PhysicalStreamsTyped = {
+      new PhysicalStreamsTyped(
+        posts=TydiStream.fromBinaryBlobs(posts, 1),
+        post_titles=TydiStream.fromBinaryBlobs(post_titles, 2),
+        post_contents=TydiStream.fromBinaryBlobs(post_contents, 2),
+        post_author_username=TydiStream.fromBinaryBlobs(post_author_username, 2),
+        post_tags=TydiStream.fromBinaryBlobs(post_tags, 3),
+        post_comments=TydiStream.fromBinaryBlobs(post_comments, 2),
+        post_comment_author_username=TydiStream.fromBinaryBlobs(post_comment_author_username, 3),
+        post_comment_content=TydiStream.fromBinaryBlobs(post_comment_content, 3),
+      )
+    }
+  }
 
   object PhysicalStreamsBinary {
     def apply(posts: PhysicalStreamsTyped): PhysicalStreamsBinary = {
@@ -159,12 +172,11 @@ object Main extends App {
 
   private val streamsTyped = PhysicalStreamsTyped(posts)
   private val streamsBinary = PhysicalStreamsBinary(streamsTyped)
+  private val streamsTypedReconstructed = streamsBinary.reverse()
 
-  val reconstructedComments: TydiStream[Comment] = TydiStream.fromBinaryBlobs(streamsBinary.post_comments, 2)
-  println(s"Reconstructed first comment: ${reconstructedComments.packets.head}")
+  println(s"Reconstructed first comment: ${streamsTypedReconstructed.post_comments.packets.head}")
 
-  val reconstructedPosts = TydiStream.fromBinaryBlobs[Post](streamsBinary.posts, 1)
-    .inject[Comment]((p: Post, s) => p.copy(comments = s.toList), reconstructedComments)
-    .toSeq
-  println(s"Reconstructed first post with comments: ${reconstructedPosts.head}")
+  private val postsReconstructed = streamsTypedReconstructed.reverse()
+
+  println(s"Reconstructed first post with comments: ${postsReconstructed.head}")
 }
