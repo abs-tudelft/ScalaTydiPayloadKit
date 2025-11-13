@@ -29,6 +29,11 @@ object FromTydiBinary {
     (if (boolVal.data == 1) true else false, res)
   }
 
+  implicit val shortFromTydiBinary: FromTydiBinary[Short] = (t: TydiBinary) => {
+    val (shortVal, res) = t.splitLow(16)
+    (shortVal.data.toShort, res)
+  }
+
   implicit val intFromTydiBinary: FromTydiBinary[Int] = (t: TydiBinary) => {
     val (intVal, res) = t.splitLow(32)
     (intVal.data.toInt, res)
