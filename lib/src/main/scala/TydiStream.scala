@@ -135,8 +135,8 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
    * @param A Typeclass for converting T to TydiBinary.
    * @return Sequence of binary blobs.
    */
-  def toBinaryBlobs()(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
-    packets.map(_.toBinary)
+  def toBinaryBlobs()(implicit A: ToTydiBinary[T]): TydiBinaryStream = {
+    TydiBinaryStream(packets.map(_.toBinary))
   }
 
   /**
@@ -144,8 +144,8 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
    * @param A Typeclass for converting T to TydiBinary.
    * @return Sequence of binary blobs.
    */
-  def toSizedBinaryBlobs(blobSize: Int)(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
-    packets.map(_.toBinary.growTo(blobSize))
+  def toSizedBinaryBlobs(blobSize: Int)(implicit A: ToTydiBinary[T]): TydiBinaryStream = {
+    TydiBinaryStream(packets.map(_.toBinary.growTo(blobSize)))
   }
 
   /**
@@ -154,7 +154,7 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
    * @return Concatenated binary blob.
    */
   def toBinaryBlob(blobSize: Int)(implicit A: ToTydiBinary[T]): TydiBinary = {
-    toSizedBinaryBlobs(blobSize).reduce(_.concat(_))
+    toSizedBinaryBlobs(blobSize).packets.reduce(_.concat(_))
   }
 
   /**
@@ -163,10 +163,10 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
    * @param A Typeclass for converting T to TydiBinary.
    * @return Sequence of binary blobs.
    */
-  def toGroupedBinaryBlobs(n: Int, blobSize: Int)(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
+  def toGroupedBinaryBlobs(n: Int, blobSize: Int)(implicit A: ToTydiBinary[T]): TydiBinaryStream = {
     require(n > 0, "Number of packets per binary blob must be positive.")
     if (n == 1) return toSizedBinaryBlobs(blobSize)
-    grouped(n).map(_.toBinaryBlob(blobSize))
+    TydiBinaryStream(grouped(n).map(_.toBinaryBlob(blobSize)))
   }
 
   /**
@@ -199,7 +199,7 @@ object TydiStream {
    * @tparam T Type of the stream's elements.
    * @return New stream.
    */
-  def fromBinaryBlobs[T](blobs: Seq[TydiBinary], dim: Int)(implicit A: FromTydiBinary[T]): TydiStream[T] = {
+  def fromBinaryBlobs[T](blobs: TydiBinaryStream, dim: Int)(implicit A: FromTydiBinary[T]): TydiStream[T] = {
     val packets = blobs.map(TydiPacket.fromTydiBinary[T](_, dim))
     TydiStream(packets)
   }

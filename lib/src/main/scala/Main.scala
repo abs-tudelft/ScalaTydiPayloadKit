@@ -75,8 +75,6 @@ object Main extends App {
     }
   }
 
-  type TydiBinaryStream = Seq[TydiBinary]
-
   case class PhysicalStreamsBinary(
                                     posts: TydiBinaryStream,
                                     post_titles: TydiBinaryStream,
