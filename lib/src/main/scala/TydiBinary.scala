@@ -42,6 +42,32 @@ case class TydiBinary (data: BigInt, length: Int) {
     (TydiBinary(new_data, n), TydiBinary(data_masked, new_length))
   }
 
+  /**
+   * Splits the binary into n chunks, each chunk having a length of ceil(length / n) bits.
+   * @param n Number of chunks to split the binary into.
+   * @return Sequence of chunks.
+   */
+  def splitChunks(n: Int): Seq[TydiBinary] = {
+    require(n > 0, "Number of chunks to split binary blob into must be positive.")
+    val chunkSize = math.ceil(length.toDouble / n).toInt
+    val chunks = (0 until n).map { i =>
+      val (chunk, rest) = splitLow(chunkSize)
+      (chunk, rest)
+    }
+    chunks.map(_._1)
+  }
+
+  /**
+   * Grows the binary to a new length. The new length must be greater than or equal to the current length.
+   * @param newLength New length of the binary.
+   * @return New binary with the specified length.
+   */
+  def growTo(newLength: Int): TydiBinary = {
+    require(newLength >= length, "New length must be greater than or equal to the current length.")
+    if (newLength == length) return this
+    TydiBinary(data, newLength)
+  }
+
   def binString: String = {
     val toPad = math.max(length - data.bitLength, 0)
     val fullBinaryString = "0".repeat(toPad) + data.toString(2)

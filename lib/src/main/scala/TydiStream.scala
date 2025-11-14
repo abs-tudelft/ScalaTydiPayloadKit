@@ -80,6 +80,7 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
     TydiStream(finalRows.reverse)
   }
 
+  /** Converts the lowest dimension of the stream to strings to end up with a stream of strings. */
   def unpackToStrings(): TydiStream[String] = {
     val charStream = this.unpackDim()
     val stringStream = charStream.mapData(c => c.mkString)
@@ -129,8 +130,53 @@ class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
     packets.map(_.data.get)
   }
 
+  /**
+   * Convert the packets in this stream to binary blobs.
+   * @param A Typeclass for converting T to TydiBinary.
+   * @return Sequence of binary blobs.
+   */
   def toBinaryBlobs()(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
     packets.map(_.toBinary)
+  }
+
+  /**
+   * Convert the packets in this stream to binary blobs.
+   * @param A Typeclass for converting T to TydiBinary.
+   * @return Sequence of binary blobs.
+   */
+  def toSizedBinaryBlobs(blobSize: Int)(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
+    packets.map(_.toBinary.growTo(blobSize))
+  }
+
+  /**
+   * Convert the packets in this stream to a single binary blob by concatenation.
+   * @param A Typeclass for converting T to TydiBinary.
+   * @return Concatenated binary blob.
+   */
+  def toBinaryBlob(blobSize: Int)(implicit A: ToTydiBinary[T]): TydiBinary = {
+    toSizedBinaryBlobs(blobSize).reduce(_.concat(_))
+  }
+
+  /**
+   * Split the stream into multiple binary blobs, each containing n packets.
+   * @param n Number of packets per binary blob.
+   * @param A Typeclass for converting T to TydiBinary.
+   * @return Sequence of binary blobs.
+   */
+  def toGroupedBinaryBlobs(n: Int, blobSize: Int)(implicit A: ToTydiBinary[T]): Seq[TydiBinary] = {
+    require(n > 0, "Number of packets per binary blob must be positive.")
+    if (n == 1) return toSizedBinaryBlobs(blobSize)
+    grouped(n).map(_.toBinaryBlob(blobSize))
+  }
+
+  /**
+   * Split the stream into multiple streams, each containing n packets.
+   * @param n Number of packets per stream.
+   * @return Sequence of streams.
+   */
+  def grouped(n: Int): Seq[TydiStream[T]] = {
+    require(n > 0, "Number of packets per binary blob must be positive.")
+    packets.grouped(n).map(TydiStream(_)).toSeq
   }
 }
 
@@ -145,8 +191,34 @@ object TydiStream {
     TydiStream(packets)
   }
 
+  /**
+   * Create a stream from a sequence of binary blobs.
+   * @param blobs Sequence of binary blobs.
+   * @param dim Dimensionality of the stream.
+   * @param A Typeclass for converting binary blobs to TydiPackets.
+   * @tparam T Type of the stream's elements.
+   * @return New stream.
+   */
   def fromBinaryBlobs[T](blobs: Seq[TydiBinary], dim: Int)(implicit A: FromTydiBinary[T]): TydiStream[T] = {
     val packets = blobs.map(TydiPacket.fromTydiBinary[T](_, dim))
+    TydiStream(packets)
+  }
+
+  /**
+   * Create a stream from a sequence of binary blobs, each containing `groupSize` packets.
+   * @param blobs Sequence of binary blobs.
+   * @param dim Dimensionality of the stream.
+   * @param groupSize Number of chunks to split the binary blobs into before converting them to TydiPackets.
+   * @param A Typeclass for converting binary blobs to TydiPackets.
+   * @tparam T Type of the stream's elements.
+   * @return New stream.
+   */
+  def fromGroupedBinaryBlobs[T](blobs: Seq[TydiBinary], dim: Int, groupSize: Int)(implicit A: FromTydiBinary[T]): TydiStream[T] = {
+    val packets = blobs.flatMap(b => {
+      b.splitChunks(groupSize).map(
+        TydiPacket.fromTydiBinary[T](_, dim)
+      )
+    })
     TydiStream(packets)
   }
 }
