@@ -50,11 +50,13 @@ case class TydiBinary (data: BigInt, length: Int) {
   def splitChunks(n: Int): Seq[TydiBinary] = {
     require(n > 0, "Number of chunks to split binary blob into must be positive.")
     val chunkSize = math.ceil(length.toDouble / n).toInt
+    var rest: TydiBinary = this
     val chunks = (0 until n).map { i =>
-      val (chunk, rest) = splitLow(chunkSize)
-      (chunk, rest)
+      val (chunk, restNew) = rest.splitLow(chunkSize)
+      rest = restNew
+      chunk
     }
-    chunks.map(_._1)
+    chunks
   }
 
   /**

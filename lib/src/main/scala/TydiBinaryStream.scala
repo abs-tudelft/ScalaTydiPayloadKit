@@ -18,6 +18,15 @@ class TydiBinaryStream (val packets: Seq[TydiBinary]) {
   }
 
   /**
+   * Expand the stream by splitting each binary blob into multiple packets.
+   * @param n Number of chunks to split the binary blobs into.
+   * @return New stream.
+   */
+  def ungroup(n: Int): TydiBinaryStream = {
+    TydiBinaryStream.fromGrouped(packets, n)
+  }
+
+  /**
    * Convert the packets in this stream to a single binary blob by concatenation.
    * @return Concatenated binary blob.
    */
