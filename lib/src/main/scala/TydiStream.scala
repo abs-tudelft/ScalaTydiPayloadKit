@@ -1,7 +1,7 @@
-package TydiPackaging
+package TydiPayloadKit
 
-import TydiPackaging.FromTydiBinary._
-import TydiPackaging.binaryMethods.fromBinaryToBoolSeq
+import FromTydiBinary._
+import binaryMethods.fromBinaryToBoolSeq
 
 class TydiStream[T] (val packets: Seq[TydiPacket[T]]) {
   /** "Drill" into the structure to the iterable field referenced in [[f]], creating a new dimension in the `last` data. */

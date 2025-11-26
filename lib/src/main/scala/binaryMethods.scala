@@ -1,4 +1,4 @@
-package TydiPackaging
+package TydiPayloadKit
 
 package object binaryMethods {
   implicit class fromIntToBinary(i: Int) {

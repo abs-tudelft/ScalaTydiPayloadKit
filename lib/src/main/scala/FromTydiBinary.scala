@@ -1,6 +1,6 @@
-package TydiPackaging
+package TydiPayloadKit
 
-import TydiPackaging.binaryMethods._
+import binaryMethods._
 
 import language.experimental.macros
 import magnolia1._

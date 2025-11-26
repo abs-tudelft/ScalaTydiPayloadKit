@@ -1,7 +1,7 @@
-package TydiPackaging
+package TydiPayloadKit
 
-import TydiPackaging.binaryMethods._
-import TydiPackaging.FromTydiBinary._
+import binaryMethods._
+import FromTydiBinary._
 
 case class TydiPacket[T] (data: Option[T], last: Seq[Boolean]) {
   def toBinary(implicit A: ToTydiBinary[T]): TydiBinary = {

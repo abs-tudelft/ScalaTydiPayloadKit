@@ -1,4 +1,4 @@
-package TydiPackaging
+package TydiPayloadKit
 
 case class TydiBinary (data: BigInt, length: Int) {
   /**

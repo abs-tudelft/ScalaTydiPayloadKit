@@ -1,4 +1,4 @@
-package TydiPackaging
+package TydiPayloadKit
 
 class TydiBinaryStream (val packets: Seq[TydiBinary]) {
   def toSeq: Seq[TydiBinary] = packets

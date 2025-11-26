@@ -1,4 +1,4 @@
-package TydiPackaging
+package TydiPayloadKit
 
 import io.circe.generic.auto._
 import io.circe.parser._

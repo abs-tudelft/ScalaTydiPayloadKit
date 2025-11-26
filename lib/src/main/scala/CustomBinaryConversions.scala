@@ -1,7 +1,7 @@
-package TydiPackaging
+package TydiPayloadKit
 
 import java.time.Instant
-import TydiPackaging.FromTydiBinary._
+import FromTydiBinary._
 
 object CustomBinaryConversions {
   implicit val instantToBinary: ToTydiBinary[Instant] = new ToTydiBinary[Instant] {
