@@ -28,6 +28,11 @@ object ToTydiBinary {
     val binSize = 1
   }
 
+  implicit val byteToTydiBinary: ToTydiBinary[Byte] = new ToTydiBinary[Byte] {
+    def toBinary(i: Byte): TydiBinary = TydiBinary(BigInt(i), binSize)
+    val binSize = 8
+  }
+
   implicit val shortToTydiBinary: ToTydiBinary[Short] = new ToTydiBinary[Short] {
     def toBinary(i: Short): TydiBinary = TydiBinary(BigInt(i), binSize)
     val binSize = 16
